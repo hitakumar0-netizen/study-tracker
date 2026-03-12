@@ -1,0 +1,1579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exam Tracker — May 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --surface2: #1a1e28;
+    --border: #252836;
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --accent: #f0c040;
+    --accent2: #4ade80;
+    --accent3: #60a5fa;
+    --accent4: #f87171;
+    --accent5: #c084fc;
+    --env: #f97316;
+    --qtm: #60a5fa;
+    --fm: #4ade80;
+    --hrm: #c084fc;
+    --cma: #f0c040;
+    --micro: #f87171;
+    --sci: #34d399;
+    --fund: #fb7185;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NOISE TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.4;
+  }
+
+  /* HEADER */
+  header {
+    padding: 2rem 2rem 1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -0.03em;
+  }
+
+  .logo span { color: var(--accent); }
+
+  .date-badge {
+    font-size: 0.7rem;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.8rem;
+    border-radius: 100px;
+  }
+
+  /* NAV TABS */
+  .nav-tabs {
+    display: flex;
+    gap: 0;
+    padding: 0 2rem;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+
+  .tab-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+    letter-spacing: 0.05em;
+  }
+
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* MAIN CONTENT */
+  .page { display: none; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  /* SUBJECT COLORS */
+  .env { color: var(--env); }
+  .qtm { color: var(--qtm); }
+  .fm { color: var(--fm); }
+  .hrm { color: var(--hrm); }
+  .cma { color: var(--cma); }
+  .micro { color: var(--micro); }
+  .sci { color: var(--sci); }
+
+  .tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 100px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .tag-env { background: rgba(249,115,22,0.15); color: var(--env); }
+  .tag-qtm { background: rgba(96,165,250,0.15); color: var(--qtm); }
+  .tag-fm { background: rgba(74,222,128,0.15); color: var(--fm); }
+  .tag-hrm { background: rgba(192,132,252,0.15); color: var(--hrm); }
+  .tag-cma { background: rgba(240,192,64,0.15); color: var(--cma); }
+  .tag-micro { background: rgba(248,113,113,0.15); color: var(--micro); }
+  .tag-sci { background: rgba(52,211,153,0.15); color: var(--sci); }
+  .tag-fund { background: rgba(251,113,133,0.15); color: var(--fund); }
+  .fund { color: var(--fund); }
+
+  /* STATS GRID */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.2rem;
+  }
+
+  .stat-number {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+
+  .stat-label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  /* PROGRESS BAR */
+  .progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+
+  /* SCHEDULE TABLE */
+  .day-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+    transition: all 0.2s;
+  }
+
+  .day-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem 1.2rem;
+    cursor: pointer;
+    gap: 1rem;
+  }
+
+  .day-header:hover { background: var(--surface2); }
+
+  .day-date {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  .day-date.today { color: var(--accent); }
+  .day-date.past { color: var(--muted); }
+
+  .day-tasks {
+    display: none;
+    padding: 0 1.2rem 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .day-block.open .day-tasks { display: block; }
+
+  .task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .task-item:last-child { border-bottom: none; }
+
+  .task-check {
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    background: transparent;
+  }
+
+  .task-check.done {
+    background: var(--accent2);
+    border-color: var(--accent2);
+  }
+
+  .task-check.done::after {
+    content: '✓';
+    color: #0d0f14;
+    font-size: 11px;
+    font-weight: bold;
+  }
+
+  .task-text { font-size: 0.8rem; line-height: 1.5; }
+  .task-text.done-text { text-decoration: line-through; color: var(--muted); }
+
+  .task-duration {
+    margin-left: auto;
+    font-size: 0.65rem;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  /* SUBJECT PROGRESS */
+  .subject-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .subject-name {
+    font-size: 0.75rem;
+    width: 220px;
+    flex-shrink: 0;
+  }
+
+  .subject-bar {
+    flex: 1;
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .subject-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+
+  .subject-pct {
+    font-size: 0.7rem;
+    color: var(--muted);
+    width: 35px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* POMODORO TIMER */
+  .timer-display {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 5rem;
+    text-align: center;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin: 1.5rem 0;
+    color: var(--accent);
+    transition: color 0.3s;
+  }
+
+  .timer-display.break { color: var(--accent2); }
+  .timer-display.danger { color: var(--accent4); }
+
+  .timer-label {
+    text-align: center;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .timer-controls {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.05em;
+  }
+
+  .btn:hover { background: var(--border); }
+  .btn.primary { background: var(--accent); color: #0d0f14; border-color: var(--accent); font-weight: 600; }
+  .btn.primary:hover { opacity: 0.9; }
+  .btn.danger { border-color: var(--accent4); color: var(--accent4); }
+
+  .timer-presets {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .preset-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .preset-btn:hover, .preset-btn.active { border-color: var(--accent); color: var(--accent); }
+
+  .session-log {
+    margin-top: 1.5rem;
+    max-height: 150px;
+    overflow-y: auto;
+  }
+
+  .session-entry {
+    font-size: 0.7rem;
+    color: var(--muted);
+    padding: 0.3rem 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* ERROR LOG */
+  .error-form {
+    display: grid;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .form-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+  select, input, textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.6rem 0.9rem;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.15s;
+    flex: 1;
+    min-width: 0;
+  }
+
+  select:focus, input:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 80px; }
+
+  .error-cards {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .error-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .error-card .error-body { flex: 1; }
+  .error-topic { font-size: 0.8rem; font-weight: 600; margin-bottom: 0.3rem; }
+  .error-note { font-size: 0.72rem; color: var(--muted); line-height: 1.5; }
+  .error-meta { font-size: 0.62rem; color: var(--muted); margin-top: 0.5rem; }
+
+  .error-status {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    align-items: flex-end;
+  }
+
+  .resolve-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .resolve-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .resolve-btn.resolved { border-color: var(--accent2); color: var(--accent2); }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 0.2rem;
+    transition: color 0.15s;
+  }
+
+  .delete-btn:hover { color: var(--accent4); }
+
+  /* TIPS SECTION */
+  .tip-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .tip-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+  }
+
+  .tip-icon { font-size: 1.4rem; margin-bottom: 0.5rem; }
+  .tip-title { font-size: 0.75rem; font-weight: 600; margin-bottom: 0.3rem; }
+  .tip-text { font-size: 0.68rem; color: var(--muted); line-height: 1.6; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* RINGS CHART */
+  .rings-container {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .ring-svg { flex-shrink: 0; }
+
+  .ring-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.72rem;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .legend-name { flex: 1; }
+  .legend-pct { color: var(--muted); }
+
+  /* EXAM COUNTDOWN */
+  .exam-list {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .exam-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+  }
+
+  .exam-days {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.4rem;
+    width: 50px;
+    flex-shrink: 0;
+    color: var(--accent);
+  }
+
+  .exam-days.soon { color: var(--accent4); }
+
+  .exam-info { flex: 1; }
+  .exam-name { font-size: 0.8rem; font-weight: 600; }
+  .exam-date { font-size: 0.65rem; color: var(--muted); margin-top: 0.2rem; }
+
+  .filter-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.05em;
+  }
+
+  .filter-btn:hover { color: var(--text); }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(240,192,64,0.08); }
+
+  .empty-state {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.75rem;
+    padding: 2rem;
+  }
+
+  .how-to-study {
+    font-size: 0.68rem;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-top: 0.4rem;
+    padding: 0.5rem;
+    background: rgba(240,192,64,0.05);
+    border-radius: 6px;
+    border-left: 2px solid var(--accent);
+  }
+
+  @media (max-width: 600px) {
+    header { padding: 1rem; }
+    .page { padding: 1rem; }
+    .timer-display { font-size: 3.5rem; }
+    .subject-name { width: 130px; font-size: 0.65rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">study<span>.</span>track</div>
+  <div id="currentDate" class="date-badge">—</div>
+</header>
+
+<nav class="nav-tabs">
+  <button class="tab-btn active" onclick="showTab('dashboard')">// dashboard</button>
+  <button class="tab-btn" onclick="showTab('schedule')">// schedule</button>
+  <button class="tab-btn" onclick="showTab('timer')">// timer</button>
+  <button class="tab-btn" onclick="showTab('errors')">// errors</button>
+  <button class="tab-btn" onclick="showTab('guide')">// how to study</button>
+</nav>
+
+<!-- ═══════════════════════════════ DASHBOARD ═══════════════════════════════ -->
+<div id="tab-dashboard" class="page active">
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-number" id="stat-days-left" style="color:var(--accent)">—</div>
+      <div class="stat-label">Days to Exams</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="stat-done" style="color:var(--accent2)">0%</div>
+      <div class="stat-label">Overall Progress</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="stat-tasks-today" style="color:var(--accent3)">—</div>
+      <div class="stat-label">Tasks Today</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="stat-errors" style="color:var(--accent4)">—</div>
+      <div class="stat-label">Error Log Items</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="stat-streak" style="color:var(--accent5)">—</div>
+      <div class="stat-label">Day Streak 🔥</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:1rem">
+    <div class="card-title">Subject Progress</div>
+    <div id="subject-progress-bars"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Exam Countdown</div>
+    <div class="exam-list" id="exam-countdown"></div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════ SCHEDULE ═══════════════════════════════ -->
+<div id="tab-schedule" class="page">
+  <div style="margin-bottom:1rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;">Study Schedule</div>
+    <button class="btn" onclick="jumpToToday()">Jump to Today</button>
+  </div>
+  <div id="schedule-container"></div>
+</div>
+
+<!-- ═══════════════════════════════ TIMER ═══════════════════════════════════ -->
+<div id="tab-timer" class="page">
+  <div style="max-width:480px;margin:0 auto;">
+
+    <div class="card">
+      <div class="card-title">Pomodoro Timer</div>
+      <div class="timer-label" id="timer-mode-label">FOCUS SESSION</div>
+      <div class="timer-display" id="timer-display">25:00</div>
+
+      <div class="timer-presets">
+        <button class="preset-btn active" onclick="setPreset(25,'FOCUS SESSION')">25 min</button>
+        <button class="preset-btn" onclick="setPreset(45,'DEEP FOCUS')">45 min</button>
+        <button class="preset-btn" onclick="setPreset(60,'FULL SESSION')">60 min</button>
+        <button class="preset-btn" onclick="setPreset(5,'SHORT BREAK','break')">5 min break</button>
+        <button class="preset-btn" onclick="setPreset(15,'LONG BREAK','break')">15 min break</button>
+      </div>
+
+      <div style="margin-top:1rem;">
+        <label style="font-size:0.7rem;color:var(--muted);display:block;margin-bottom:0.4rem;">Studying:</label>
+        <select id="timer-subject">
+          <option value="">— select subject —</option>
+          <option value="env">Environmental Science II (AEC1)</option>
+          <option value="qtm">Quantitative Techniques (DSC10)</option>
+          <option value="fm">Financial Management (DSC11)</option>
+          <option value="hrm">Human Resource Management (DSC12)</option>
+          <option value="cma">Cost & Management Accounting (DSC4)</option>
+          <option value="micro">Microeconomics (DSC5)</option>
+          <option value="sci">Science & Society (VAC1)</option>
+          <option value="fund">Fundraising & Mgmt (GE-4)</option>
+        </select>
+      </div>
+
+      <div class="timer-controls" style="margin-top:1.5rem;">
+        <button class="btn primary" id="start-btn" onclick="startTimer()">START</button>
+        <button class="btn" onclick="pauseTimer()">PAUSE</button>
+        <button class="btn danger" onclick="resetTimer()">RESET</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Session Log — Today</div>
+      <div class="session-log" id="session-log">
+        <div class="empty-state">No sessions yet today.</div>
+      </div>
+      <div style="margin-top:1rem;font-size:0.72rem;color:var(--muted);">
+        Total today: <span id="total-minutes" style="color:var(--accent)">0</span> minutes
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ ERRORS ═══════════════════════════════════ -->
+<div id="tab-errors" class="page">
+
+  <div class="card">
+    <div class="card-title">Log a Mistake / Weak Topic</div>
+    <div class="error-form">
+      <div class="form-row">
+        <select id="err-subject">
+          <option value="">Subject</option>
+          <option value="env">Env Science II</option>
+          <option value="qtm">Quant Techniques</option>
+          <option value="fm">Financial Mgmt</option>
+          <option value="hrm">HRM</option>
+          <option value="cma">Cost & Mgmt Accounting</option>
+          <option value="micro">Microeconomics</option>
+          <option value="sci">Science & Society</option>
+          <option value="fund">Fundraising & Mgmt</option>
+        </select>
+        <input id="err-topic" type="text" placeholder="Topic / Chapter name" />
+      </div>
+      <textarea id="err-note" placeholder="What did you get wrong? What should you remember? Be specific."></textarea>
+      <div class="form-row">
+        <select id="err-severity">
+          <option value="high">High priority (revisit ASAP)</option>
+          <option value="medium">Medium (revisit this week)</option>
+          <option value="low">Low (just note it)</option>
+        </select>
+        <button class="btn primary" onclick="addError()">ADD TO LOG</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:1rem;">
+    <div class="filter-row" id="error-filters">
+      <button class="filter-btn active" onclick="filterErrors('all')">All</button>
+      <button class="filter-btn" onclick="filterErrors('unresolved')">Unresolved</button>
+      <button class="filter-btn" onclick="filterErrors('env')">Env Sci</button>
+      <button class="filter-btn" onclick="filterErrors('qtm')">QTM</button>
+      <button class="filter-btn" onclick="filterErrors('fm')">Fin Mgmt</button>
+      <button class="filter-btn" onclick="filterErrors('hrm')">HRM</button>
+      <button class="filter-btn" onclick="filterErrors('cma')">CMA</button>
+      <button class="filter-btn" onclick="filterErrors('micro')">Micro</button>
+      <button class="filter-btn" onclick="filterErrors('sci')">Sci & Soc</button>
+      <button class="filter-btn" onclick="filterErrors('fund')">Fundraising</button>
+    </div>
+  </div>
+
+  <div id="error-list" class="error-cards"></div>
+</div>
+
+<!-- ═══════════════════════════════ HOW TO STUDY ═══════════════════════════════ -->
+<div id="tab-guide" class="page">
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-title">Your Schedule Overview</div>
+    <div style="font-size:0.8rem;line-height:1.8;">
+      <div style="margin-bottom:0.5rem;">📅 <strong>Phase 1 (Mar 13 – Apr 30):</strong> 2.5 hrs/day — Foundation building, all subjects covered weekly</div>
+      <div style="margin-bottom:0.5rem;">📅 <strong>Phase 2 (May 1 – May 12):</strong> 8 hrs/day — Intensive revision, previous year Qs, mock tests</div>
+      <div>🎯 <strong>Exams start:</strong> May 15, 2026</div>
+    </div>
+  </div>
+
+  <div class="tip-grid">
+    <div class="tip-card">
+      <div class="tip-icon">📐</div>
+      <div class="tip-title" style="color:var(--qtm)">QTM (DSC10)</div>
+      <div class="tip-text">Do NOT just read. Solve 5+ problems per topic daily. Use Taha or Vohra. Master LPP graphically first, then simplex. Transportation: VAM > NWC. Make formula sheets. Practice past year papers from Week 6.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">💰</div>
+      <div class="tip-title" style="color:var(--fm)">Financial Management (DSC11)</div>
+      <div class="tip-text">Every concept needs a numerical. Capital budgeting: NPV, IRR, Payback — practice all 3 on same problem. WACC: memorize weightings formula. For dividend theories (Gordon, Walter, MM), understand assumptions + numericals.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">📊</div>
+      <div class="tip-title" style="color:var(--cma)">Cost & Mgmt Accounting (DSC4)</div>
+      <div class="tip-text">CVP analysis and variance analysis are high-weightage. Marginal vs. absorption costing — prepare side-by-side comparison. Make a formula sheet for all variances. Practice cost sheets daily in Phase 2.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">👥</div>
+      <div class="tip-title" style="color:var(--hrm)">HRM (DSC12)</div>
+      <div class="tip-text">Theory-heavy. Use mind maps for each unit. HRM functions, recruitment process, training methods — create flow diagrams. Industrial Relations: know dispute machinery steps in order. 1-page summaries per topic.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">📉</div>
+      <div class="tip-title" style="color:var(--micro)">Microeconomics (DSC5)</div>
+      <div class="tip-text">Draw every diagram by hand: demand/supply, IC, isoquants, MC/AC, market structures. Don't memorize — understand the logic. For market structures, prepare a comparative table (features, SR eq, LR eq).</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">🌿</div>
+      <div class="tip-title" style="color:var(--env)">Env Science II (AEC1)</div>
+      <div class="tip-text">Fact-heavy but logical. Make timeline of all environmental legislations. For biodiversity, use mnemonics. International agreements — group by theme. Write 5-line answers for practice. Field visit notes = exam answers.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">🔬</div>
+      <div class="tip-title" style="color:var(--sci)">Science & Society (VAC1)</div>
+      <div class="tip-text">Case study based. Link scientific discoveries to societal impact. Revise Indian scientists and women in science. Unit II activities — remember the experiment principles. Short, crisp answers work best.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">💸</div>
+      <div class="tip-title" style="color:var(--fund)">Fundraising & Mgmt (GE-4)</div>
+      <div class="tip-text">Concept + case study based. For each funding type (bootstrapping, VC, crowdfunding, debt), memorize: definition, pros, cons, and 1 Indian example. Units 3&4 are easier marks — prepare answers on investor communication and pitch crafting. Always link answers to Indian startups.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">🍅</div>
+      <div class="tip-title">Pomodoro Strategy</div>
+      <div class="tip-text">Phase 1: 2×50min blocks with 10min break. Phase 2: Use 4×90min blocks with 20min breaks. First 30min of each session = active recall (close book, write what you know). Last 15min = error log.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">🔁</div>
+      <div class="tip-title">Spaced Repetition</div>
+      <div class="tip-text">Review a topic on day 1, day 3, day 7, then day 14. Use the Error Log to track weak areas. Every Sunday, revise all error log items from that week. Phase 2 = pure revision + past papers.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════ DATA ═══════════════════════
+
+const SUBJECTS = {
+  env:   { name: 'Env Science II', color: '#f97316', tag: 'tag-env' },
+  qtm:   { name: 'Quant Techniques', color: '#60a5fa', tag: 'tag-qtm' },
+  fm:    { name: 'Financial Mgmt', color: '#4ade80', tag: 'tag-fm' },
+  hrm:   { name: 'HRM', color: '#c084fc', tag: 'tag-hrm' },
+  cma:   { name: 'Cost & Mgmt Acc', color: '#f0c040', tag: 'tag-cma' },
+  micro: { name: 'Microeconomics', color: '#f87171', tag: 'tag-micro' },
+  sci:   { name: 'Science & Society', color: '#34d399', tag: 'tag-sci' },
+  fund:  { name: 'Fundraising & Mgmt', color: '#fb7185', tag: 'tag-fund' }
+};
+
+const EXAMS = [
+  { subject: 'env',   name: 'Env Science II (AEC1)',   date: '2026-05-15' },
+  { subject: 'qtm',   name: 'Quant Techniques (DSC10)', date: '2026-05-16' },
+  { subject: 'fm',    name: 'Financial Mgmt (DSC11)',   date: '2026-05-17' },
+  { subject: 'hrm',   name: 'HRM (DSC12)',              date: '2026-05-19' },
+  { subject: 'cma',   name: 'Cost & Mgmt Acc (DSC4)',   date: '2026-05-20' },
+  { subject: 'micro', name: 'Microeconomics (DSC5)',    date: '2026-05-21' },
+  { subject: 'sci',   name: 'Science & Society (VAC1)', date: '2026-05-22' },
+  { subject: 'fund',  name: 'Fundraising & Mgmt (GE-4)', date: '2026-05-23' }
+];
+
+// All tasks organized by date
+// Phase 1: Mar 13 – Apr 30, 2.5 hrs/day
+// Phase 2: May 1 – May 12, 8 hrs/day
+
+function buildSchedule() {
+  const schedule = {};
+
+  // PHASE 1 TOPICS
+  const phase1Topics = [
+    // Week 1 (Mar 13-19): Env + QTM intro
+    { d:'2026-03-13', tasks:[
+      { s:'env', t:'Unit V: Causes of Climate Change, Global Warming', how:'Read, make notes, draw cause-effect diagram', dur:'45m' },
+      { s:'qtm', t:'Unit I: LPP — Formulation and Graphical Method', how:'Theory + 3 formulation problems', dur:'60m' },
+      { s:'sci', t:'Unit I: Philosophy of Science, Scientific Method', how:'Read + make 1-page summary', dur:'30m' }
+    ]},
+    { d:'2026-03-14', tasks:[
+      { s:'env', t:'Unit V: Ozone Depletion, Acid Rain — causes & impacts', how:'Notes + draw ozone layer diagram', dur:'45m' },
+      { s:'qtm', t:'Unit I: LPP Graphical — Special Cases (infeasibility, unbounded)', how:'Solve 3 problems each case type', dur:'60m' },
+      { s:'fm', t:'Unit 1: Nature of Financial Management, Time Value of Money', how:'Read + solve PV/FV problems', dur:'45m' }
+    ]},
+    { d:'2026-03-15', tasks:[
+      { s:'env', t:'Unit V: International Agreements (Earth Summit, UNFCCC, Montreal, Kyoto)', how:'Make a timeline + key points per agreement', dur:'45m' },
+      { s:'qtm', t:'Unit I: Simplex Method (Big-M)', how:'Theory + 2 problems step by step', dur:'60m' },
+      { s:'hrm', t:'Unit 1: HRM Concept, Functions, HRD Goals', how:'Read + mind map the functions', dur:'30m' }
+    ]},
+    { d:'2026-03-17', tasks:[
+      { s:'env', t:'Unit V: CBD, Ramsar, CWC, CITES, UNEP agreements', how:'1-line summary per agreement, group by theme', dur:'40m' },
+      { s:'qtm', t:'Unit I: Simplex — Two-Phase Method', how:'Theory + 2 practice problems', dur:'60m' },
+      { s:'cma', t:'Unit 1: Nature & Scope of Cost Accounting, Cost Sheet', how:'Read + prepare 1 sample cost sheet', dur:'45m' }
+    ]},
+    { d:'2026-03-18', tasks:[
+      { s:'env', t:'Unit V: SDGs, India\'s NAPCC and 8 Missions', how:'List all missions with 2-line descriptions each', dur:'40m' },
+      { s:'micro', t:'Unit 1: Individual & Market Demand, Supply', how:'Draw all curves, elasticity formulas', dur:'60m' },
+      { s:'fm', t:'Unit 2: Capital Budgeting — Payback, Discounted Payback', how:'Solve 3 numerical problems', dur:'45m' }
+    ]},
+    { d:'2026-03-19', tasks:[
+      { s:'env', t:'Unit V: Environment Legislation (Wildlife Act 1972, Water Act 1974, Forest Act 1980)', how:'Key provisions, year, purpose for each', dur:'40m' },
+      { s:'qtm', t:'Unit I: Review LPP, solve 2 mixed problems', how:'Full end-to-end problems including interpretation', dur:'60m' },
+      { s:'fund', t:'Unit 1: Introduction to Fundraising, Bootstrapping & Self-Financing', how:'Read + list pros/cons of bootstrapping vs external funding. Indian examples: Patanjali', dur:'45m' }
+    ]},
+    // Week 2 (Mar 20-26): Biodiversity + Financial Mgmt
+    { d:'2026-03-20', tasks:[
+      { s:'env', t:'Unit V: Air Act 1981, Environment Protection Act 1986, Forest Rights Act 2006', how:'Key provisions + landmark cases', dur:'40m' },
+      { s:'fm', t:'Unit 2: NPV and Profitability Index', how:'Theory + 3 numericals', dur:'60m' },
+      { s:'fund', t:'Unit 1: Financial Planning & Budgeting for Entrepreneurs', how:'Read + draft a simple financial plan template for a startup', dur:'40m' }
+    ]},
+    { d:'2026-03-21', tasks:[
+      { s:'env', t:'Unit VI: Definition of Biodiversity, Levels (genetic, species, ecosystem)', how:'Diagrams + examples at each level', dur:'40m' },
+      { s:'qtm', t:'Unit II: Duality — Primal-Dual, Shadow Price', how:'Theory + write dual of 2 problems', dur:'65m' },
+      { s:'micro', t:'Unit 1: Elasticities — price, income, cross-price', how:'Formulas + 3 numerical problems', dur:'40m' }
+    ]},
+    { d:'2026-03-22', tasks:[
+      { s:'env', t:'Unit VI: India as mega-biodiversity nation, Biogeographic zones', how:'Map of zones + characteristics table', dur:'40m' },
+      { s:'fm', t:'Unit 2: IRR and Modified IRR, NPV vs IRR', how:'Theory + 2 numerical comparisons', dur:'60m' },
+      { s:'cma', t:'Unit 2: Absorption vs Marginal Costing, Contribution', how:'Side-by-side comparison + numerical', dur:'45m' }
+    ]},
+    { d:'2026-03-24', tasks:[
+      { s:'env', t:'Unit VI: Biodiversity Hotspots, Endemic & Endangered species, IUCN categories', how:'List hotspots + IUCN categories with definitions', dur:'40m' },
+      { s:'qtm', t:'Unit II: Post-Optimality Analysis (changes in cost coefficients)', how:'Theory + 1 sensitivity analysis problem', dur:'60m' },
+      { s:'hrm', t:'Unit 2: HR Planning Process, Forecasting demand & supply', how:'Flowchart of planning process', dur:'40m' }
+    ]},
+    { d:'2026-03-25', tasks:[
+      { s:'env', t:'Unit VI: Values of Biodiversity (ecological, economic, social, ethical)', how:'One paragraph + examples per value', dur:'40m' },
+      { s:'fm', t:'Unit 2: Cost of Capital (WACC, cost of debt, equity, retained earnings)', how:'Formulas + 2 WACC numericals', dur:'60m' },
+      { s:'micro', t:'Unit 2: Cardinal Utility Theory, Marginal Utility', how:'Law of DMU + consumer equilibrium diagram', dur:'40m' }
+    ]},
+    { d:'2026-03-26', tasks:[
+      { s:'env', t:'Unit VI: Sacred Groves, Threats to Biodiversity (habitat loss, poaching)', how:'Case examples + notes', dur:'40m' },
+      { s:'qtm', t:'Unit II: Game Theory — Saddle Point, Minimax/Maximin', how:'Theory + 2 problems', dur:'60m' },
+      { s:'fund', t:'Unit 1: Cash Flow Management & Working Capital Optimization', how:'Notes + compare working capital needs of 2 startup types', dur:'45m' }
+    ]},
+    // Week 3 (Mar 27 – Apr 2)
+    { d:'2026-03-27', tasks:[
+      { s:'env', t:'Unit VI: Man-wildlife conflicts, Biological invasion', how:'Examples from India + impacts', dur:'35m' },
+      { s:'qtm', t:'Unit II: Game Theory — Mixed Strategy, Dominance Rule', how:'2×2 and 2×n games with graphical method', dur:'65m' },
+      { s:'hrm', t:'Unit 2: Job Analysis, Job Description & Specifications', how:'Create a sample JD + JS for any role', dur:'40m' }
+    ]},
+    { d:'2026-03-28', tasks:[
+      { s:'env', t:'Unit VI: In-situ vs Ex-situ conservation methods', how:'Comparison table with examples', dur:'35m' },
+      { s:'fm', t:'Unit 3: Capital Structure Theories (NI, NOI, Traditional approach)', how:'Diagrams for each theory + key assumptions', dur:'60m' },
+      { s:'fund', t:'Unit 2: Crowdfunding — Types (reward, equity, donation, debt), Platforms, Best Practices', how:'Compare Kickstarter/Ketto/Milaap. Table: type vs platform vs best for', dur:'45m' }
+    ]},
+    { d:'2026-03-29', tasks:[
+      { s:'env', t:'Unit VI: National Parks, Wildlife Sanctuaries, Biosphere Reserves — differences', how:'Table: definition, example, governing law', dur:'35m' },
+      { s:'qtm', t:'Unit II: Game Theory — m×n games via LP', how:'1 complete problem', dur:'65m' },
+      { s:'cma', t:'Unit 2: Relevant Costs & Decision Making (Make/Buy, Drop product)', how:'2 decision-making problems', dur:'45m' }
+    ]},
+    { d:'2026-03-31', tasks:[
+      { s:'env', t:'Unit VI: Keystone, Flagship, Umbrella, Indicator species', how:'Definition + Indian examples each', dur:'30m' },
+      { s:'fm', t:'Unit 3: Leverage (Operating, Financial, Combined) + EBIT-EPS', how:'Formulas + 2 numericals', dur:'60m' },
+      { s:'hrm', t:'Unit 2: Recruitment sources, Selection process & tests', how:'Flowchart of selection process', dur:'45m' }
+    ]},
+    { d:'2026-04-01', tasks:[
+      { s:'env', t:'Unit VI: Case Studies — Project Tiger, Project Elephant, Vulture Breeding', how:'2-3 key facts per project: objective, year, outcome', dur:'35m' },
+      { s:'qtm', t:'Unit III: Transportation — NW Corner, Least Cost, VAM', how:'Solve 1 problem using all 3 methods', dur:'65m' },
+      { s:'fund', t:'Unit 2: Peer-to-Peer Lending, Microfinancing & Social Stock Exchange', how:'Notes on each + Indian examples (Milaap, NABARD). How SSE differs from regular stock exchange', dur:'45m' }
+    ]},
+    { d:'2026-04-02', tasks:[
+      { s:'env', t:'Unit VI: Silent Valley, Save Western Ghats movements', how:'Background, issue, outcome, significance', dur:'30m' },
+      { s:'fm', t:'Unit 3: Dividend Decisions — Gordon, Walter models', how:'Theory + 1 numerical for each model', dur:'60m' },
+      { s:'cma', t:'Unit 3: Budgetary Control — Types of Budgets', how:'Prepare skeleton Sales + Production budget', dur:'45m' }
+    ]},
+    // Week 4 (Apr 3–9)
+    { d:'2026-04-03', tasks:[
+      { s:'env', t:'Unit VII: Human Population Growth — impacts on environment & health', how:'Notes + carbon footprint examples', dur:'35m' },
+      { s:'qtm', t:'Unit III: Transportation — MODI Method (finding optimal solution)', how:'Complete 1 end-to-end transportation problem', dur:'65m' },
+      { s:'hrm', t:'Unit 3: Training — Concept, Process, Methods', how:'Table of on-the-job vs off-the-job methods', dur:'45m' }
+    ]},
+    { d:'2026-04-04', tasks:[
+      { s:'env', t:'Unit VII: Resettlement & Rehabilitation — relevant case studies', how:'2-3 dam project examples with impacts', dur:'35m' },
+      { s:'fm', t:'Unit 3: MM Hypothesis + Signalling Theory, Forms of Dividend', how:'MM assumptions + comparison with Gordon/Walter', dur:'55m' },
+      { s:'micro', t:'Unit 3: Production — Short-run (product curves, law of DMProd)', how:'Diagrams: TP, AP, MP with all 3 stages', dur:'50m' }
+    ]},
+    { d:'2026-04-05', tasks:[
+      { s:'env', t:'Unit VII: Environmental Movements (Chipko, Appiko, Narmada Bachao)', how:'For each: cause, leader, method, outcome', dur:'35m' },
+      { s:'qtm', t:'Unit III: Transportation Special Cases (unbalanced, prohibited routes)', how:'1 problem with dummy row/column', dur:'55m' },
+      { s:'fund', t:'Unit 2: Strategic Partnerships, Joint Ventures & Social Impact Investing', how:'Notes + case study: Tata Power renewable JV. Difference between CSR vs Social Impact Investing', dur:'50m' }
+    ]},
+    { d:'2026-04-07', tasks:[
+      { s:'env', t:'Unit VII: Bishnois of Rajasthan, Environmental Justice, National Green Tribunal', how:'NGT — powers, landmark cases', dur:'35m' },
+      { s:'qtm', t:'Unit III: Assignment Problem — Hungarian Method', how:'2 complete problems', dur:'60m' },
+      { s:'hrm', t:'Unit 3: Performance Management, Appraisal Methods, Career Planning', how:'Mind map of all appraisal methods', dur:'50m' }
+    ]},
+    { d:'2026-04-08', tasks:[
+      { s:'env', t:'Unit VII: Environmental Ethics, Role of Religion in Conservation', how:'Examples: Buddhist, Hindu practices + conservation', dur:'30m' },
+      { s:'fm', t:'Unit 4: Working Capital Management — Determination', how:'Operating cycle concept + numerical', dur:'60m' },
+      { s:'fund', t:'Unit 3: Building & Maintaining Investor Relationships', how:'Notes: what investors look for, communication best practices. Flipkart case study', dur:'45m' }
+    ]},
+    { d:'2026-04-09', tasks:[
+      { s:'env', t:'Unit VII: Swachh Bharat, CNG vehicles Delhi, NEAC — environmental communication', how:'Key facts + outcomes for each initiative', dur:'30m' },
+      { s:'qtm', t:'Unit III: Assignment — Special Cases (maximization, unbalanced)', how:'1 problem each type', dur:'55m' },
+      { s:'cma', t:'Unit 4: Standard Costing — Material Cost Variance (Price, Usage, Mix, Yield)', how:'Formula sheet + 2 complete variance problems', dur:'60m' }
+    ]},
+    // Week 5 (Apr 10–16)
+    { d:'2026-04-10', tasks:[
+      { s:'sci', t:'Unit I: Science & Technology — Ancient India (water harvesting, architecture)', how:'Notes + Indian scientist contributions list', dur:'40m' },
+      { s:'qtm', t:'Unit IV: Network Analysis — AOA Diagrams, CPM', how:'Draw 2 network diagrams + find critical path', dur:'60m' },
+      { s:'hrm', t:'Unit 3: Compensation — Components, Job Evaluation, Trends', how:'List all components + brief notes on each', dur:'40m' }
+    ]},
+    { d:'2026-04-11', tasks:[
+      { s:'sci', t:'Unit I: Modern Science — Public Health (Vaccines, AMR, Nutrition)', how:'Key developments + policy implications', dur:'40m' },
+      { s:'fm', t:'Unit 4: Receivables Management — Credit Policy, Costs', how:'Notes on all 4 cost types + credit policy decisions', dur:'55m' },
+      { s:'micro', t:'Unit 3: Short-run and Long-run Costs (traditional theory)', how:'Draw all cost curves (TC, TVC, MC, AC, AVC)', dur:'50m' }
+    ]},
+    { d:'2026-04-12', tasks:[
+      { s:'sci', t:'Unit I: Green Revolution, White Revolution, IT Revolution in India', how:'Key statistics + societal impact for each', dur:'40m' },
+      { s:'qtm', t:'Unit IV: Float Analysis (Total, Free, Independent Float)', how:'2 PERT/CPM problems with float calculation', dur:'60m' },
+      { s:'fund', t:'Unit 3: Effective Communication Strategies for Investors + Reporting Financial Performance', how:'Notes on investor reporting, what goes in a report, Paytm/OYO case study', dur:'45m' }
+    ]},
+    { d:'2026-04-14', tasks:[
+      { s:'sci', t:'Unit I: Space Science (ISRO missions), Clean Energy, Evolution', how:'Key missions + renewable energy types', dur:'35m' },
+      { s:'qtm', t:'Unit IV: PERT (probability), Time-Cost Optimization', how:'1 PERT problem + concept notes on time-cost tradeoff', dur:'65m' },
+      { s:'hrm', t:'Unit 4: Industrial Relations — Trade Unions (types, functions, problems)', how:'Mind map of trade union structure', dur:'45m' }
+    ]},
+    { d:'2026-04-15', tasks:[
+      { s:'sci', t:'Unit II: Scientific Principles — experiments overview (DNA, photosynthesis, pH)', how:'Understand principle behind each experiment', dur:'35m' },
+      { s:'fm', t:'Unit 4: Cash Management, Inventory (EOQ, ABC Analysis)', how:'EOQ formula + 2 numerical problems', dur:'55m' },
+      { s:'micro', t:'Unit 4: Perfect Competition — SR and LR Equilibrium', how:'Diagrams for firm + industry, SR loss/profit/BEP', dur:'55m' }
+    ]},
+    { d:'2026-04-16', tasks:[
+      { s:'sci', t:'Unit I: AI, Robotics, Big Data, Genomics overview', how:'2-line description of each + societal impact', dur:'35m' },
+      { s:'qtm', t:'Unit IV: Full network revision — 2 mixed problems', how:'End-to-end CPM + PERT practice', dur:'60m' },
+      { s:'fund', t:'Unit 4: Equity Financing — Seed Fund, Angel Investors, Venture Capital', how:'Notes on funding stages (pre-seed → Series A/B/C). Table: Angel vs VC vs PE differences', dur:'50m' }
+    ]},
+    // Week 6 (Apr 17–23): First revision round
+    { d:'2026-04-17', tasks:[
+      { s:'env', t:'REVISION: Unit V — Full Global Issues & Policies', how:'Re-read notes, write 5-mark answers from memory', dur:'60m' },
+      { s:'qtm', t:'REVISION: Unit I — LPP (full problem set)', how:'Solve 3 problems: formulation → simplex → interpret', dur:'90m' }
+    ]},
+    { d:'2026-04-18', tasks:[
+      { s:'fm', t:'REVISION: Units 1&2 — TVM + Capital Budgeting', how:'Solve mixed set of 4 numericals', dur:'75m' },
+      { s:'fund', t:'Unit 4: Debt Financing — Loans, Grants, Government Schemes (Startup India, MUDRA, SIDBI)', how:'List government schemes with eligibility + amount. Notes on debt vs equity tradeoff', dur:'70m' }
+    ]},
+    { d:'2026-04-19', tasks:[
+      { s:'cma', t:'REVISION: Units 1&2 — Cost classification + CVP', how:'3 CVP problems + 1 cost sheet', dur:'75m' },
+      { s:'micro', t:'REVISION: Units 1&2 — Demand/Supply + Consumer Theory', how:'Draw all diagrams without reference', dur:'60m' }
+    ]},
+    { d:'2026-04-21', tasks:[
+      { s:'env', t:'REVISION: Unit VI — Biodiversity & Conservation', how:'Write notes from memory on each sub-topic', dur:'60m' },
+      { s:'qtm', t:'REVISION: Units II&III — Game Theory + Transportation', how:'2 game theory + 1 transportation problem', dur:'90m' }
+    ]},
+    { d:'2026-04-22', tasks:[
+      { s:'fm', t:'REVISION: Unit 3 — Capital Structure + Dividend Decisions', how:'Compare all theories, 2 leverage problems', dur:'75m' },
+      { s:'fund', t:'Unit 4: Monitoring Expenditure + Financial Performance Analysis & Benchmarking', how:'Notes on KPIs, benchmarking tools. Case: BigBasket, Nykaa, Swiggy financial mgmt', dur:'70m' }
+    ]},
+    { d:'2026-04-23', tasks:[
+      { s:'env', t:'REVISION: Unit VII — Human Communities', how:'Flash-card style revision of all movements + NGT', dur:'50m' },
+      { s:'cma', t:'REVISION: Units 3&4 — Budgets + Variance Analysis', how:'2 complete standard costing problems', dur:'80m' }
+    ]},
+    // Week 7 (Apr 24–30): Final Phase 1 push
+    { d:'2026-04-24', tasks:[
+      { s:'hrm', t:'REVISION: Units 3&4 — Training, Performance, Industrial Relations', how:'Write model answers for 10-mark questions', dur:'75m' },
+      { s:'qtm', t:'REVISION: Unit IV — Network Analysis full revision', how:'2 CPM + 1 PERT problem', dur:'75m' }
+    ]},
+    { d:'2026-04-25', tasks:[
+      { s:'sci', t:'REVISION: Complete Science & Society', how:'Unit I + II: write all key points from memory', dur:'60m' },
+      { s:'fund', t:'REVISION: Units 1 & 2 — Fundraising Strategies + Crowdfunding', how:'Write summary of all funding sources. Case study notes: Zomato, Ola, Ketto', dur:'80m' }
+    ]},
+    { d:'2026-04-26', tasks:[
+      { s:'fm', t:'REVISION: Unit 4 — Working Capital complete revision', how:'Cash cycle diagram + 2 WCM problems', dur:'75m' },
+      { s:'env', t:'REVISION: All legislation in order + international agreements', how:'Timeline quiz yourself: cover answers, recall dates', dur:'70m' }
+    ]},
+    { d:'2026-04-28', tasks:[
+      { s:'qtm', t:'MIXED REVISION: Full QTM past paper attempt', how:'Set timer for 3 hours, attempt full mock paper', dur:'90m' }
+    ]},
+    { d:'2026-04-29', tasks:[
+      { s:'cma', t:'MIXED REVISION: Full CMA mock paper', how:'Attempt comprehensive question set under exam conditions', dur:'90m' }
+    ]},
+    { d:'2026-04-30', tasks:[
+      { s:'fm', t:'MIXED REVISION: FM — attempt comprehensive question set', how:'NPV, WACC, leverage, WCM — all types', dur:'75m' },
+      { s:'fund', t:'REVISION: Units 3 & 4 — Investor Relations + Financial Mgmt & Budgeting', how:'Write 4 long answers: one per topic. Include Indian case studies in each', dur:'70m' }
+    ]},
+  ];
+
+  // Phase 2: May 1–12, 8 hrs/day — Intensive
+  const phase2Topics = [
+    { d:'2026-05-01', tasks:[
+      { s:'env', t:'INTENSIVE: Env Science — Unit V full revision + past Qs', how:'Morning: revise all notes. Afternoon: attempt 20 questions', dur:'120m' },
+      { s:'qtm', t:'INTENSIVE: LPP + Simplex — full revision', how:'5 LPP problems, simplex included', dur:'120m' },
+      { s:'fm', t:'INTENSIVE: Capital Budgeting numericals', how:'NPV, IRR, Payback — mixed set of 8', dur:'120m' },
+      { s:'fund', t:'INTENSIVE: Units 1&2 — Fundraising Strategies + Crowdfunding full revision', how:'All funding types + Indian case studies. Write 3 long-form answers', dur:'90m' }
+    ]},
+    { d:'2026-05-02', tasks:[
+      { s:'env', t:'INTENSIVE: Biodiversity — complete notes + case studies', how:'Write 5 short-answer questions from memory', dur:'120m' },
+      { s:'qtm', t:'INTENSIVE: Game Theory + Transportation full problems', how:'3 game theory + 2 transportation problems', dur:'120m' },
+      { s:'micro', t:'INTENSIVE: Demand, Supply, Elasticity full revision', how:'Draw all diagrams + 4 elasticity problems', dur:'120m' },
+      { s:'cma', t:'INTENSIVE: CVP Analysis — comprehensive problem set', how:'BEP, P/V ratio, margin of safety — 5 problems', dur:'90m' }
+    ]},
+    { d:'2026-05-03', tasks:[
+      { s:'env', t:'INTENSIVE: Human Communities + Legislation timeline', how:'Final memorization drill', dur:'90m' },
+      { s:'qtm', t:'INTENSIVE: Network Analysis — 3 full CPM/PERT problems', how:'Full solutions with float analysis', dur:'120m' },
+      { s:'fm', t:'INTENSIVE: WACC + Capital Structure + Leverage', how:'4 WACC + 2 leverage problems', dur:'120m' },
+      { s:'hrm', t:'INTENSIVE: Training, Performance, Industrial Relations', how:'10 short answers from memory', dur:'90m' }
+    ]},
+    { d:'2026-05-04', tasks:[
+      { s:'env', t:'FULL MOCK: Environmental Science Paper', how:'Simulate 1-hour exam. Review errors immediately.', dur:'90m' },
+      { s:'cma', t:'INTENSIVE: Standard Costing — all variances', how:'3 complete variance analysis problems', dur:'120m' },
+      { s:'micro', t:'INTENSIVE: Production + Costs full revision', how:'All diagrams + 3 cost problems', dur:'120m' },
+      { s:'sci', t:'INTENSIVE: Science & Society full revision', how:'Unit I: key events/people. Unit II: experiment principles', dur:'90m' }
+    ]},
+    { d:'2026-05-05', tasks:[
+      { s:'qtm', t:'FULL MOCK: QTM Paper (3 hours)', how:'Full paper under exam conditions. Error log all mistakes.', dur:'180m' },
+      { s:'fm', t:'INTENSIVE: Dividend Decisions + Working Capital', how:'5 mixed problems', dur:'120m' },
+      { s:'micro', t:'INTENSIVE: Market Structures full revision', how:'Comparative table + diagrams for all 4 structures', dur:'120m' }
+    ]},
+    { d:'2026-05-06', tasks:[
+      { s:'fm', t:'FULL MOCK: Financial Management Paper (3 hours)', how:'Full paper under exam conditions.', dur:'180m' },
+      { s:'env', t:'FINAL: Error log review + weak topics', how:'Review all error log entries for Env Science', dur:'90m' },
+      { s:'fund', t:'INTENSIVE: Units 3&4 — Investor Relations + Financial Mgmt & Budgeting', how:'Notes on negotiation skills, pitch crafting. Case studies: OYO, Paytm, Swiggy', dur:'90m' }
+    ]},
+    { d:'2026-05-07', tasks:[
+      { s:'hrm', t:'FULL MOCK: HRM Paper (3 hours)', how:'Full paper under exam conditions.', dur:'180m' },
+      { s:'qtm', t:'FINAL ERROR LOG REVIEW: QTM weak topics', how:'Rework all QTM error log items', dur:'120m' },
+      { s:'cma', t:'INTENSIVE: Budgetary Control full revision + cash budget', how:'2 complete budget problems', dur:'120m' }
+    ]},
+    { d:'2026-05-08', tasks:[
+      { s:'cma', t:'FULL MOCK: Cost & Management Accounting Paper', how:'Full paper under exam conditions.', dur:'180m' },
+      { s:'micro', t:'FINAL: Market equilibrium + welfare analysis', how:'Welfare cost of monopoly + price discrimination', dur:'120m' },
+      { s:'sci', t:'FINAL: Science & Society — practice short answers', how:'10 short answers without notes', dur:'90m' }
+    ]},
+    { d:'2026-05-09', tasks:[
+      { s:'micro', t:'FULL MOCK: Microeconomics Paper (3 hours)', how:'Full paper under exam conditions.', dur:'180m' },
+      { s:'fm', t:'FINAL: Review all FM error log entries', how:'Rework every flagged numerical', dur:'120m' },
+      { s:'fund', t:'FULL MOCK: Fundraising — attempt comprehensive question set', how:'Write answers on all 4 units. Include case study analysis. Simulate exam conditions.', dur:'120m' }
+    ]},
+    { d:'2026-05-10', tasks:[
+      { s:'sci', t:'FINAL: Science & Society full revision', how:'Both units — crisp notes, ready for exam', dur:'120m' },
+      { s:'hrm', t:'FINAL: HRM — review all 4 units once more', how:'Speed revision using mind maps', dur:'120m' },
+      { s:'fund', t:'FINAL: Fundraising — error log review + Indian case studies recap', how:'All 4 Indian company case studies (Zomato, Ola, Flipkart, BigBasket). Review weak topics.', dur:'90m' }
+    ]},
+    { d:'2026-05-11', tasks:[
+      { s:'env', t:'PRE-EXAM DAY 1: Environmental Science — final read', how:'Notes only, no new learning. Review error log.', dur:'120m' },
+      { s:'qtm', t:'PRE-EXAM: QTM — formula sheet review + 5 quick problems', how:'One of each type for confidence', dur:'180m' },
+      { s:'fm', t:'PRE-EXAM: FM — formula revision sheet', how:'All formulas + 2 quick problems', dur:'120m' }
+    ]},
+    { d:'2026-05-12', tasks:[
+      { s:'env', t:'FINAL DAY: Light revision — Environmental Science', how:'Read summary notes only. Rest well by 9pm.', dur:'60m' },
+      { s:'qtm', t:'FINAL DAY: QTM summary — key formulas only', how:'Formula sheet review. Do NOT solve new problems.', dur:'60m' },
+      { s:'fm', t:'FINAL DAY: FM summary sheet review', how:'Formulas + key concepts. Stay calm.', dur:'60m' },
+      { s:'hrm', t:'FINAL DAY: HRM quick glance — key points', how:'Mind maps only. 30 minutes max.', dur:'30m' }
+    ]}
+  ];
+
+  [...phase1Topics, ...phase2Topics].forEach(day => {
+    schedule[day.d] = day.tasks;
+  });
+
+  return schedule;
+}
+
+const SCHEDULE = buildSchedule();
+
+// ═══════════════════════ STATE ═══════════════════════
+let state = JSON.parse(localStorage.getItem('studytracker_v2') || '{}');
+// state.checked[date][index] = bool
+// state.errors = []
+// state.sessions = []
+if (!state.checked) state.checked = {};
+if (!state.errors) state.errors = [];
+if (!state.sessions) state.sessions = [];
+
+function saveState() { localStorage.setItem('studytracker_v2', JSON.stringify(state)); }
+
+// ═══════════════════════ TABS ═══════════════════════
+function showTab(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'schedule') renderSchedule();
+  if (name === 'errors') renderErrors();
+}
+
+// ═══════════════════════ UTILS ═══════════════════════
+function todayStr() {
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
+}
+
+function parseDate(s) { return new Date(s + 'T00:00:00'); }
+
+function daysBetween(a, b) {
+  return Math.ceil((parseDate(b) - parseDate(a)) / 86400000);
+}
+
+function formatDate(s) {
+  const d = parseDate(s);
+  return d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+// ═══════════════════════ DASHBOARD ═══════════════════════
+function renderDashboard() {
+  const today = todayStr();
+
+  // Days to first exam
+  const daysLeft = daysBetween(today, '2026-05-15');
+  document.getElementById('stat-days-left').textContent = Math.max(0, daysLeft);
+
+  // Overall progress
+  let total = 0, done = 0;
+  Object.entries(SCHEDULE).forEach(([d, tasks]) => {
+    tasks.forEach((_, i) => {
+      total++;
+      if (state.checked[d] && state.checked[d][i]) done++;
+    });
+  });
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  document.getElementById('stat-done').textContent = pct + '%';
+
+  // Tasks today
+  const todayTasks = SCHEDULE[today] || [];
+  const todayDone = todayTasks.filter((_, i) => state.checked[today] && state.checked[today][i]).length;
+  document.getElementById('stat-tasks-today').textContent = todayDone + '/' + todayTasks.length;
+
+  // Errors
+  document.getElementById('stat-errors').textContent = (state.errors || []).filter(e => !e.resolved).length;
+
+  // Streak
+  let streak = 0;
+  let checkDay = today;
+  for (let i = 0; i < 60; i++) {
+    const dayTasks = SCHEDULE[checkDay];
+    if (dayTasks && dayTasks.length > 0) {
+      const allDone = dayTasks.every((_, idx) => state.checked[checkDay] && state.checked[checkDay][idx]);
+      if (allDone) { streak++; }
+      else if (checkDay !== today) { break; }
+    }
+    const d = new Date(checkDay + 'T00:00:00');
+    d.setDate(d.getDate() - 1);
+    checkDay = d.toISOString().slice(0,10);
+  }
+  document.getElementById('stat-streak').textContent = streak;
+
+  // Subject progress bars
+  const subjectDone = {}, subjectTotal = {};
+  Object.keys(SUBJECTS).forEach(k => { subjectDone[k] = 0; subjectTotal[k] = 0; });
+  Object.entries(SCHEDULE).forEach(([d, tasks]) => {
+    tasks.forEach((task, i) => {
+      subjectTotal[task.s] = (subjectTotal[task.s] || 0) + 1;
+      if (state.checked[d] && state.checked[d][i]) subjectDone[task.s] = (subjectDone[task.s] || 0) + 1;
+    });
+  });
+
+  let barsHtml = '';
+  Object.entries(SUBJECTS).forEach(([k, sub]) => {
+    const t = subjectTotal[k] || 0;
+    const dn = subjectDone[k] || 0;
+    const p = t > 0 ? Math.round((dn / t) * 100) : 0;
+    barsHtml += `
+      <div class="subject-row">
+        <div class="subject-name"><span class="${k}">${sub.name}</span></div>
+        <div class="subject-bar"><div class="subject-fill" style="width:${p}%;background:${sub.color}"></div></div>
+        <div class="subject-pct">${p}%</div>
+      </div>`;
+  });
+  document.getElementById('subject-progress-bars').innerHTML = barsHtml;
+
+  // Exam countdown
+  let examHtml = '';
+  EXAMS.forEach(exam => {
+    const days = daysBetween(today, exam.date);
+    const daysText = days <= 0 ? 'TODAY!' : days + 'd';
+    const soonClass = days <= 5 ? 'soon' : '';
+    examHtml += `
+      <div class="exam-item">
+        <div class="exam-days ${soonClass}">${daysText}</div>
+        <div class="exam-info">
+          <div class="exam-name ${exam.subject}">${exam.name}</div>
+          <div class="exam-date">${formatDate(exam.date)}</div>
+        </div>
+      </div>`;
+  });
+  document.getElementById('exam-countdown').innerHTML = examHtml;
+}
+
+// ═══════════════════════ SCHEDULE ═══════════════════════
+function renderSchedule() {
+  const today = todayStr();
+  const sortedDates = Object.keys(SCHEDULE).sort();
+  let html = '';
+
+  sortedDates.forEach(date => {
+    const tasks = SCHEDULE[date];
+    const isToday = date === today;
+    const isPast = date < today;
+    const dayDone = tasks.filter((_, i) => state.checked[date] && state.checked[date][i]).length;
+    const allDone = dayDone === tasks.length;
+    const dateClass = isToday ? 'today' : (isPast ? 'past' : '');
+    const phase = date >= '2026-05-01' ? '⚡ INTENSIVE' : '📚';
+
+    let tagsHtml = [...new Set(tasks.map(t => t.s))].map(s =>
+      `<span class="tag ${SUBJECTS[s].tag}">${SUBJECTS[s].name.split(' ')[0]}</span>`
+    ).join(' ');
+
+    html += `
+      <div class="day-block ${isToday ? 'open' : ''}" id="day-${date}">
+        <div class="day-header" onclick="toggleDay('${date}')">
+          <div>
+            <div class="day-date ${dateClass}">${isToday ? '▶ TODAY — ' : ''}${phase} ${formatDate(date)}</div>
+            <div style="margin-top:0.3rem;display:flex;gap:0.4rem;flex-wrap:wrap">${tagsHtml}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <div style="font-size:0.7rem;color:${allDone?'var(--accent2)':'var(--muted)'};">${dayDone}/${tasks.length} ✓</div>
+            <div style="color:var(--muted);font-size:0.8rem;" id="chevron-${date}">${isToday?'▲':'▼'}</div>
+          </div>
+        </div>
+        <div class="day-tasks">`;
+
+    tasks.forEach((task, i) => {
+      const checked = state.checked[date] && state.checked[date][i];
+      html += `
+          <div class="task-item">
+            <div class="task-check ${checked ? 'done' : ''}" onclick="toggleTask('${date}',${i})"></div>
+            <div style="flex:1">
+              <div class="task-text ${checked ? 'done-text' : ''}">
+                <span class="tag ${SUBJECTS[task.s].tag}" style="margin-right:0.4rem">${SUBJECTS[task.s].name}</span>
+                ${task.t}
+              </div>
+              <div class="how-to-study">💡 ${task.how}</div>
+            </div>
+            <div class="task-duration">${task.dur}</div>
+          </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  document.getElementById('schedule-container').innerHTML = html;
+}
+
+function toggleDay(date) {
+  const block = document.getElementById('day-' + date);
+  const ch = document.getElementById('chevron-' + date);
+  block.classList.toggle('open');
+  ch.textContent = block.classList.contains('open') ? '▲' : '▼';
+}
+
+function toggleTask(date, idx) {
+  if (!state.checked[date]) state.checked[date] = {};
+  state.checked[date][idx] = !state.checked[date][idx];
+  saveState();
+  renderSchedule();
+  renderDashboard();
+}
+
+function jumpToToday() {
+  const today = todayStr();
+  const el = document.getElementById('day-' + today);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!el.classList.contains('open')) toggleDay(today);
+  }
+}
+
+// ═══════════════════════ TIMER ═══════════════════════
+let timerInterval = null;
+let timerSeconds = 25 * 60;
+let timerRunning = false;
+let timerMode = 'focus';
+let currentPresetLabel = 'FOCUS SESSION';
+let totalMinutesToday = 0;
+
+function setPreset(mins, label, mode) {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  if (event) event.currentTarget.classList.add('active');
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerSeconds = mins * 60;
+  currentPresetLabel = label;
+  timerMode = mode || 'focus';
+  document.getElementById('timer-mode-label').textContent = label;
+  updateTimerDisplay();
+  document.getElementById('start-btn').textContent = 'START';
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+  const s = (timerSeconds % 60).toString().padStart(2, '0');
+  const el = document.getElementById('timer-display');
+  el.textContent = m + ':' + s;
+  el.className = 'timer-display';
+  if (timerMode === 'break') el.classList.add('break');
+  else if (timerSeconds <= 60) el.classList.add('danger');
+}
+
+function startTimer() {
+  if (timerRunning) return;
+  timerRunning = true;
+  document.getElementById('start-btn').textContent = 'RUNNING...';
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    updateTimerDisplay();
+    if (timerSeconds <= 0) {
+      clearInterval(timerInterval);
+      timerRunning = false;
+      document.getElementById('start-btn').textContent = 'START';
+      if (timerMode !== 'break') logSession();
+      playBeep();
+      alert(timerMode === 'break' ? '☕ Break over! Time to focus.' : '✅ Session complete! Take a break.');
+    }
+  }, 1000);
+}
+
+function pauseTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  document.getElementById('start-btn').textContent = 'RESUME';
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  document.getElementById('start-btn').textContent = 'START';
+  const btn = document.querySelector('.preset-btn.active');
+  if (btn) {
+    const text = btn.textContent;
+    const mins = parseInt(text);
+    timerSeconds = mins * 60;
+  } else {
+    timerSeconds = 25 * 60;
+  }
+  updateTimerDisplay();
+}
+
+function logSession() {
+  const subSel = document.getElementById('timer-subject');
+  const subName = subSel.options[subSel.selectedIndex].text;
+  const mins = Math.round((timerSeconds < 0 ? 0 : (25*60 - timerSeconds)) / 60);
+  const actualMins = parseInt(document.querySelector('.preset-btn.active')?.textContent) || 25;
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+  state.sessions.push({ time: timeStr, subject: subName, mins: actualMins, date: todayStr() });
+  saveState();
+  renderSessionLog();
+}
+
+function renderSessionLog() {
+  const todaySessions = (state.sessions || []).filter(s => s.date === todayStr());
+  const total = todaySessions.reduce((a, s) => a + s.mins, 0);
+  document.getElementById('total-minutes').textContent = total;
+
+  if (!todaySessions.length) {
+    document.getElementById('session-log').innerHTML = '<div class="empty-state">No sessions yet today.</div>';
+    return;
+  }
+
+  document.getElementById('session-log').innerHTML = [...todaySessions].reverse().map(s =>
+    `<div class="session-entry"><span>🍅 ${s.subject}</span><span>${s.mins}m @ ${s.time}</span></div>`
+  ).join('');
+}
+
+function playBeep() {
+  try {
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.8);
+  } catch(e) {}
+}
+
+// ═══════════════════════ ERRORS ═══════════════════════
+function addError() {
+  const subject = document.getElementById('err-subject').value;
+  const topic = document.getElementById('err-topic').value.trim();
+  const note = document.getElementById('err-note').value.trim();
+  const severity = document.getElementById('err-severity').value;
+
+  if (!subject || !topic) { alert('Please fill in subject and topic.'); return; }
+
+  state.errors.push({
+    id: Date.now(),
+    subject, topic, note, severity,
+    date: todayStr(),
+    resolved: false
+  });
+  saveState();
+
+  document.getElementById('err-subject').value = '';
+  document.getElementById('err-topic').value = '';
+  document.getElementById('err-note').value = '';
+
+  renderErrors();
+}
+
+let errorFilter = 'all';
+
+function filterErrors(f) {
+  errorFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  renderErrors();
+}
+
+function renderErrors() {
+  let errors = state.errors || [];
+
+  if (errorFilter === 'unresolved') errors = errors.filter(e => !e.resolved);
+  else if (errorFilter !== 'all') errors = errors.filter(e => e.subject === errorFilter);
+
+  if (!errors.length) {
+    document.getElementById('error-list').innerHTML = '<div class="empty-state">No errors logged yet. Keep studying!</div>';
+    return;
+  }
+
+  const sevColor = { high: 'var(--accent4)', medium: 'var(--accent)', low: 'var(--muted)' };
+
+  document.getElementById('error-list').innerHTML = [...errors].reverse().map(e =>
+    `<div class="error-card">
+      <div class="error-body">
+        <div class="error-topic">
+          <span class="tag ${SUBJECTS[e.subject]?.tag || ''}" style="margin-right:0.5rem">${SUBJECTS[e.subject]?.name || e.subject}</span>
+          ${e.topic}
+        </div>
+        ${e.note ? `<div class="error-note">${e.note}</div>` : ''}
+        <div class="error-meta">Logged: ${formatDate(e.date)} · Priority: <span style="color:${sevColor[e.severity]}">${e.severity}</span></div>
+      </div>
+      <div class="error-status">
+        <button class="resolve-btn ${e.resolved ? 'resolved' : ''}" onclick="toggleResolve(${e.id})">
+          ${e.resolved ? '✓ resolved' : 'resolve'}
+        </button>
+        <button class="delete-btn" onclick="deleteError(${e.id})">✕</button>
+      </div>
+    </div>`
+  ).join('');
+}
+
+function toggleResolve(id) {
+  const e = state.errors.find(e => e.id === id);
+  if (e) { e.resolved = !e.resolved; saveState(); renderErrors(); }
+}
+
+function deleteError(id) {
+  state.errors = state.errors.filter(e => e.id !== id);
+  saveState();
+  renderErrors();
+}
+
+// ═══════════════════════ INIT ═══════════════════════
+function init() {
+  // Update date badge
+  const now = new Date();
+  document.getElementById('currentDate').textContent =
+    now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  renderDashboard();
+  renderSchedule();
+  renderSessionLog();
+  updateTimerDisplay();
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
